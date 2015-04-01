@@ -1,0 +1,26 @@
+{
+  "name": "beer-vis",
+  "version": "1.0.0",
+  "authors": [
+    "Beer-vis"
+  ],
+  "description": "Beer Visualization",
+  "main": "index.html",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "js/lib",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "d3": "~3.5.5",
+    "jquery": "~2.1.3",
+    "underscore": "~1.8.2",
+    "requirejs": "~2.1.16",
+    "requirejs-text": "~2.0.14",
+    "requirejs-plugins": "~1.0.3"
+  }
+}
