@@ -3,6 +3,7 @@ requirejs.config({
   paths: {
     app: 'main',
     d3: 'lib/d3/d3',
+    topojson: 'lib/topojson/topojson',
     jquery: 'lib/jquery/dist/jquery',
     underscore: 'lib/underscore/underscore',
     text: 'lib/requirejs-text/text',

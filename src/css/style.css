@@ -131,3 +131,12 @@ figure.main-figure {
 .button-group{
   cursor: pointer;
 }
+
+
+
+
+.land-boundary,
+.state-boundary {
+  stroke: #444;
+  fill: transparent;
+}

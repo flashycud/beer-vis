@@ -21,6 +21,7 @@
     "underscore": "~1.8.2",
     "requirejs": "~2.1.16",
     "requirejs-text": "~2.0.14",
-    "requirejs-plugins": "~1.0.3"
+    "requirejs-plugins": "~1.0.3",
+    "topojson": "~1.6.18"
   }
 }
