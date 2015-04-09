@@ -137,6 +137,7 @@ figure.main-figure {
 
 .land-boundary,
 .state-boundary {
-  stroke: #444;
-  fill: transparent;
+  stroke: #FFF;
+  stroke-width: 1px;
+  fill: #DDD;
 }
