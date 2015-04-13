@@ -132,12 +132,39 @@ figure.main-figure {
   cursor: pointer;
 }
 
+svg.map {
 
-
-
-.land-boundary,
+}
+svg.map.overlay{
+  position: absolute;
+  top:0;
+  left:0;
+  z-index: 1;
+}
 .state-boundary {
+  fill: transparent;
   stroke: #FFF;
-  stroke-width: 1px;
-  fill: #DDD;
+}
+.state-boundary.overlay{
+  stroke: none;
+}
+
+.hidden {
+  display:none;
+}
+.map-popup-holder {
+  position: absolute;
+  z-index: 0;
+}
+.map-popup {
+  position: absolute;
+  background: #000;
+  width: 100px;
+  height: 100px;
+}
+
+.beer-icon {
+  fill: #FFD400;
+  /*stroke: #888;*/
+  /*stroke-width: 0.2px;*/
 }
