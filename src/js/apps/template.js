@@ -20,8 +20,8 @@ function($, d3) {
       $('.title', map).html(data.title);
       $('.ravg', map).html(data.ravg);
       target.css({
-        top: y,
-        left: x
+        top: y -150,
+        left: x-150
       })
       target.append(map);
     },

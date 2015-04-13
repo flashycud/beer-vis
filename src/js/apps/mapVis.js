@@ -11,9 +11,14 @@ define([
 
   var _options = {
     width: 960,
-    height: 500,
+    height: 600,
 
-    color_range: [d3.rgb(240,240,240),d3.rgb(29,145,145)]
+    color_range: [d3.rgb(240,240,240),d3.rgb(29,145,145)],
+
+    scroll_x: 200,
+    scroll_y: 520,
+    scroll_width: 600,
+    scroll_height: 25
 
   }
 
@@ -29,28 +34,29 @@ define([
   
   function MapVis(canvas, options) {
     var _this = this;
-    options = _.extend(_options, options)
+    this.options = _.extend(_options, options)
     this.canvas = canvas || d3.select('body');
     this.svg = this.canvas.append('svg')
         .attr({
           class: "map",
-          width:options.width, 
-          height:options.height
+          width:this.options.width, 
+          height:this.options.height
         });
     this.svg_overlay = this.canvas.append('svg')
         .attr({
           class: "map overlay",
-          width:options.width, 
-          height:options.height
+          width:this.options.width, 
+          height:this.options.height
         });
 
     this.path = d3.geo.path();
-    this.color = d3.scale.linear().range(options.color_range);  
+    this.color = d3.scale.linear().range(this.options.color_range);  
     this.scale = d3.scale.linear().range([0.5, 5]);
+    this.scrollScale = d3.scale.linear().range([0, this.options.scroll_width]);
 
     this.gradient = this.svg.append("svg:defs")
         .append("svg:linearGradient")
-        .attr("id", "rating_gradient")
+        .attr("id", "rating-gradient")
         .attr("x1", "0%")
         .attr("y1", "0%")
         .attr("x2", "100%")
@@ -58,12 +64,12 @@ define([
 
     this.gradient.append("svg:stop")
         .attr("offset", "0%")
-        .attr("stop-color", options.color_range[0])
+        .attr("stop-color", this.options.color_range[0])
         .attr("stop-opacity", 1);
 
     this.gradient.append("svg:stop")
         .attr("offset", "100%")
-        .attr("stop-color", options.color_range[1])
+        .attr("stop-color", this.options.color_range[1])
         .attr("stop-opacity", 1);
     
     queue()
@@ -78,47 +84,43 @@ define([
 
   MapVis.prototype.drawMap = function(err, us, sb) {
     var _this = this;
-    var max = d3.max(sb, function(d){ return d.ravg}),
-        min = d3.min(sb, function(d){ return d.ravg}),
-        max_beer = d3.max(sb, function(d) { return d.beer_count}),
-        min_beer = d3.min(sb, function(d) { return d.beer_count}),
+    this._sb = sb;
+    this.sb = sb.slice(0);
+    x = this.s = {};
+    var max = d3.max(_this.sb, function(d){ return d.ravg}),
+        min = d3.min(_this.sb, function(d){ return d.ravg}),
+        max_beer = d3.max(_this.sb, function(d) { return d.beer_count}),
+        min_beer = d3.min(_this.sb, function(d) { return d.beer_count}),
         us_topo = topojson.feature(us, us.objects.states).features;
     this.color.domain([min,max]);
     this.scale.domain([min_beer,max_beer]);
+    this.scrollScale.domain([0,5]);
 
-    var states_group, states, states_overlay, beers_group, beers, beer, popup, scroll_group;
+    var states_group, states, states_overlay, beers_group, beers, beer, popup, scroll_group, scroll, main_axis, curr_axis,main_axis_group,curr_axis_group;
+
 
     states_group = this.svg.append('svg:g');
-    states = states_group.selectAll("path")
+    this.states = states = states_group.selectAll("path")
         .data(us_topo);
     states.enter().append("path")
         .attr("d", this.path)
         .attr("class", function(d, i) { return "state-boundary state-boundary-"+i})
         .style("fill", function(d, i){
-          return _this.color(sb[i].ravg);
+          return _this.color(_this.sb[i].ravg);
         })
       .append("title").text(function(d){return d.id});
 
     beers_group = this.svg.append('svg:g');
-    beers = beers_group.selectAll('.beer-icon')
+    this.beers = beers = beers_group.selectAll('.beer-icon')
         .data(us_topo);
     beer = beers.enter().append("g")
         .attr("class", "beer-icon")
     beer.append("path")
         .attr(beer_icon.path_attr)
-        .attr("transform", function(d, i){ return transformBeer.call(_this, d, i, sb); });
+        .attr("transform", function(d, i){ return transformBeer.call(_this, d, i, _this.sb); });
     beer.append("rect")
         .attr(beer_icon.rect_attr)
-        .attr("transform", function(d, i){ return transformBeer.call(_this, d, i ,sb); });
-
-    scroll_group = this.svg.append('svg:g');
-    scroll_group.append('svg:rect')
-      .attr("x", 20)
-      .attr("y", 500)
-      .attr("width", 900)
-      .attr("height", 20)
-      .attr("class", "scroll-background");
-
+        .attr("transform", function(d, i){ return transformBeer.call(_this, d, i ,_this.sb); });
 
     popup = this.canvas.append("div").attr("class", "map-popup-holder");
 
@@ -129,18 +131,69 @@ define([
         .attr("class", "state-boundary overlay")
         .on('mouseover', function(d, i){
           states_group.select(".state-boundary-"+i).style("fill","#E2BF5A");
-          var centroid = _this.path.centroid(d);
-          template.activateMapPopup(popup, centroid[0], centroid[1], {
-            title: sb[i].name,
-            ravg: sb[i].ravg
-          });
+          var centroid = _this.path.centroid(d),
+
+          //Data input
+              _data = {
+                title: _this.sb[i].name,
+                ravg: Math.round(_this.sb[i].ravg*100)/100,
+                beer_count: _this.sb[i].beer_count,
+                beers: _this.sb[i].beers
+              }
+
+
+          template.activateMapPopup(popup, centroid[0], centroid[1], _data);
         })
         .on('mouseout', function(d,i) {
           states_group.select(".state-boundary-"+i).style("fill",function(){
-            return _this.color(sb[i].ravg);
+            return _this.color(_this.sb[i].ravg);
           });
           template.deactivateMapPopup();
         });
+
+    scroll_group = this.svg_overlay.append('svg:g')
+        .attr("transform", "translate("+this.options.scroll_x+","+this.options.scroll_y+")");
+    scroll_group.append('svg:rect')
+        .attr("width", this.options.scroll_width)
+        .attr("height", this.options.scroll_height)
+        .attr("class", "scroll-background");
+    scroll = scroll_group.append('svg:rect')
+        .attr("transform", "translate("+this.scrollScale(min)+",0)")
+        .attr("width", this.scrollScale(max-min))
+        .attr("height", this.options.scroll_height)
+        .attr("class", "scroll")
+        .style("fill", "url('#rating-gradient')");
+    main_axis = d3.svg.axis()
+        .scale(this.scrollScale)
+        .orient("bottom")
+        .tickSize(this.options.scroll_height)
+        .tickValues([0,1,2,3,4,5]);
+    curr_axis = d3.svg.axis()
+        .scale(this.scrollScale)
+        .orient("bottom")
+        .tickSize(this.options.scroll_height)
+        .tickValues([min,max]);
+    main_axis_group = scroll_group.append("svg:g").attr("class","main-axis");
+    curr_axis_group = scroll_group.append("svg:g").attr("class","curr-axis");
+    main_axis_group.call(main_axis);
+    curr_axis_group.call(curr_axis);
+
+    for(var i=0; i<sb.length; i++) {
+      queue()
+        .defer(d3.json, 'js/json/states/'+sb[i].name+'/brew_style.json')
+        .await(function(err, bb){
+          if(!err) {
+            _this.s[bb.name] = bb;
+
+          } else {
+            console.log(err);
+          }
+        });
+    }
+
+  }
+
+  MapVis.prototype.redrawMap = function() {
 
   }
 
