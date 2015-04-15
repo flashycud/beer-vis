@@ -171,6 +171,7 @@ svg.map.overlay{
   font-size: 0.8rem;
 }
 .map-popup .ravg {
+  top: -10px;
   padding: 25px 10px 7px;
   background-color: #888;
   color: #FFF;
@@ -217,6 +218,39 @@ svg.map.overlay{
   border-right: 14px solid transparent;
   border-bottom: none;
 }
+.map-popup .left-top {
+  left: 10px;
+  top: 6px;
+  line-height: 1;
+}
+.map-popup .left-top span {
+  display: inline-block;
+  font-weight: 400;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+.map-popup .style{
+  /*position: absolute;*/
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.7rem;
+  line-height: 1;
+  margin-top: 4px;
+  /*top: 9px;*/
+  /*right: 10px;*/
+  color: #BB3030;
+}
+.map-popup .left-top span.count {
+  color: #999;
+  padding-left: 17px;
+  position: relative;
+}
+.map-popup .left-top span.count:before {
+  content: '\2022';
+  position: absolute;
+  left: -5px;
+  padding-left: 10px;
+}
 
 .beer-icon {
   fill: #FFD400;
@@ -237,14 +271,20 @@ svg.map.overlay{
   stroke: #DDD;
   shape-rendering: crispEdges;
 }
-.curr-axis line {
+.curr-axis line.first,
+.curr-axis line.second {
   stroke: #000;
   shape-rendering: crispEdges;
 }
 .main-axis text {
-  fill: #DDD;
+  fill: #BBB;
 }
-.curr-axis text {
+.curr-axis text.first,
+.curr-axis text.second {
   stroke: #000;
   shape-rendering: crispEdges;
+}
+.curr-axis polygon.first,
+.curr-axis polygon.second {
+  fill: #000;
 }

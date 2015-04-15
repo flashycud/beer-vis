@@ -18,7 +18,11 @@ define([
     scroll_x: 200,
     scroll_y: 520,
     scroll_width: 600,
-    scroll_height: 25
+    scroll_height: 25,
+
+    transition_duration: 500,
+
+    min_revs: 100
 
   }
 
@@ -52,7 +56,7 @@ define([
     this.path = d3.geo.path();
     this.color = d3.scale.linear().range(this.options.color_range);  
     this.scale = d3.scale.linear().range([0.5, 5]);
-    this.scrollScale = d3.scale.linear().range([0, this.options.scroll_width]);
+    this.scrollScale = d3.scale.linear().domain([0,5]).range([0, this.options.scroll_width]);
 
     this.gradient = this.svg.append("svg:defs")
         .append("svg:linearGradient")
@@ -75,32 +79,46 @@ define([
     queue()
         .defer(d3.json, "js/json/us.json")
         .defer(d3.json, "js/json/state_brew.json")
+        .defer(d3.json, "js/json/styles.json")
         .await(function() { 
-          _this.drawMap.apply(_this, arguments); 
+          drawMapVis.apply(_this, arguments); 
         });
     
 
   }
 
-  MapVis.prototype.drawMap = function(err, us, sb) {
-    var _this = this;
+  function setMinMax() {
+    this.max_rating = d3.max(this.sb, function(d){ return d.ravg});
+    this.min_rating = d3.min(this.sb, function(d){ return d.ravg});
+    this.max_beer = d3.max(this.sb, function(d) { return d.beer_count});
+    this.min_beer = d3.min(this.sb, function(d) { return d.beer_count});
+
+    this.color.domain([this.min_rating,this.max_rating]);
+    this.scale.domain([this.min_beer,this.max_beer]);
+  }
+
+  function drawMapVis(err, us, sb, sl) {
+    var _this = this, us_topo;
+
+    //init data
+    this._us = us;
     this._sb = sb;
+    this._sl = sl;
     this.sb = sb.slice(0);
-    x = this.s = {};
-    var max = d3.max(_this.sb, function(d){ return d.ravg}),
-        min = d3.min(_this.sb, function(d){ return d.ravg}),
-        max_beer = d3.max(_this.sb, function(d) { return d.beer_count}),
-        min_beer = d3.min(_this.sb, function(d) { return d.beer_count}),
-        us_topo = topojson.feature(us, us.objects.states).features;
-    this.color.domain([min,max]);
-    this.scale.domain([min_beer,max_beer]);
-    this.scrollScale.domain([0,5]);
+    this.s = {};
+    this.style = undefined;
+
+    setMinMax.call(this);
+    
+    us_topo = topojson.feature(us, us.objects.states).features;
+
+    
 
     var states_group, states, states_overlay, beers_group, beers, beer, popup, scroll_group, scroll, main_axis, curr_axis,main_axis_group,curr_axis_group;
 
-
+    // Map
     states_group = this.svg.append('svg:g');
-    this.states = states = states_group.selectAll("path")
+    states = states_group.selectAll("path.state-boundary")
         .data(us_topo);
     states.enter().append("path")
         .attr("d", this.path)
@@ -110,47 +128,52 @@ define([
         })
       .append("title").text(function(d){return d.id});
 
+    // Beer icons
     beers_group = this.svg.append('svg:g');
-    this.beers = beers = beers_group.selectAll('.beer-icon')
+    beers = beers_group.selectAll('.beer-icon')
         .data(us_topo);
     beer = beers.enter().append("g")
         .attr("class", "beer-icon")
+        .attr("transform", function(d, i){ return transformBeer.call(_this, d, i, _this.sb); });
     beer.append("path")
         .attr(beer_icon.path_attr)
-        .attr("transform", function(d, i){ return transformBeer.call(_this, d, i, _this.sb); });
     beer.append("rect")
         .attr(beer_icon.rect_attr)
-        .attr("transform", function(d, i){ return transformBeer.call(_this, d, i ,_this.sb); });
 
+    // Hovering Popup
     popup = this.canvas.append("div").attr("class", "map-popup-holder");
 
+    // Overlay
     states_overlay = this.svg_overlay.selectAll("path")
         .data(us_topo)
     states_overlay.enter().append("path")
         .attr("d", this.path)
         .attr("class", "state-boundary overlay")
         .on('mouseover', function(d, i){
-          states_group.select(".state-boundary-"+i).style("fill","#E2BF5A");
-          var centroid = _this.path.centroid(d),
-
-          //Data input
-              _data = {
-                title: _this.sb[i].name,
-                ravg: Math.round(_this.sb[i].ravg*100)/100,
-                beer_count: _this.sb[i].beer_count,
-                beers: _this.sb[i].beers
-              }
-
-
-          template.activateMapPopup(popup, centroid[0], centroid[1], _data);
+          if(_this.sb[i].beer_count>0){
+            states_group.select(".state-boundary-"+i).style("fill","#E2BF5A");
+            var centroid = _this.path.centroid(d),
+                _data = {
+                  title: _this.sb[i].name,
+                  ravg: Math.round(_this.sb[i].ravg*100)/100,
+                  style: _this.style,
+                  beer_count: _this.sb[i].beer_count,
+                  beers: _this.sb[i].beers
+                }
+            template.activateMapPopup(popup, centroid[0], centroid[1], _data);
+          }
         })
         .on('mouseout', function(d,i) {
-          states_group.select(".state-boundary-"+i).style("fill",function(){
-            return _this.color(_this.sb[i].ravg);
-          });
+          if(_this.sb[i].beer_count>0){
+
+            states_group.select(".state-boundary-"+i).style("fill",function(){
+              return _this.color(_this.sb[i].ravg);
+            });
+          }
           template.deactivateMapPopup();
         });
 
+    // Scroll 
     scroll_group = this.svg_overlay.append('svg:g')
         .attr("transform", "translate("+this.options.scroll_x+","+this.options.scroll_y+")");
     scroll_group.append('svg:rect')
@@ -158,8 +181,8 @@ define([
         .attr("height", this.options.scroll_height)
         .attr("class", "scroll-background");
     scroll = scroll_group.append('svg:rect')
-        .attr("transform", "translate("+this.scrollScale(min)+",0)")
-        .attr("width", this.scrollScale(max-min))
+        .attr("transform", "translate("+this.scrollScale(this.min_rating)+",0)")
+        .attr("width", this.scrollScale(this.max_rating-this.min_rating))
         .attr("height", this.options.scroll_height)
         .attr("class", "scroll")
         .style("fill", "url('#rating-gradient')");
@@ -169,31 +192,142 @@ define([
         .tickSize(this.options.scroll_height)
         .tickValues([0,1,2,3,4,5]);
     curr_axis = d3.svg.axis()
-        .scale(this.scrollScale)
+        .scale(this.currScrollScale)
         .orient("bottom")
         .tickSize(this.options.scroll_height)
-        .tickValues([min,max]);
+        .tickValues([this.min_rating,this.max_rating]);
     main_axis_group = scroll_group.append("svg:g").attr("class","main-axis");
     curr_axis_group = scroll_group.append("svg:g").attr("class","curr-axis");
     main_axis_group.call(main_axis);
-    curr_axis_group.call(curr_axis);
+    curr_axis = curr_axis_group.append("g");
+    curr_axis.append("line")
+        .attr("class", "first")
+        .attr("y2", this.options.scroll_height)
+        .attr("transform", "translate(" + this.scrollScale(this.min_rating) + ",0)");
+    curr_axis.append("polygon")
+        .attr("class", "first")
+        .attr("points", "-5.774,-10 0,0 5.774,-10")
+        .attr("transform", "translate(" + this.scrollScale(this.min_rating) + ",0)");
+    curr_axis.append("text")
+        .attr("class", "first")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "hanging")
+        .attr("y", this.options.scroll_height + 2)
+        .text(Math.round(_this.min_rating*100)/100)
+        .attr("transform", "translate(" + this.scrollScale(this.min_rating) + ",0)");
+    
+    curr_axis.append("line")
+        .attr("class", "second")
+        .attr("y2", this.options.scroll_height)
+        .attr("transform", "translate(" + this.scrollScale(this.max_rating) + ",0)");    
+    curr_axis.append("polygon")
+        .attr("class", "second")
+        .attr("points", "-5.774,-10 0,0 5.774,-10")
+        .attr("transform", "translate(" + this.scrollScale(this.max_rating) + ",0)");
+    curr_axis.append("text")
+        .attr("class", "second")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "hanging")
+        .attr("y", this.options.scroll_height + 2)
+        .text(Math.round(_this.max_rating*100)/100)
+        .attr("transform", "translate(" + this.scrollScale(this.max_rating) + ",0)");
+
 
     for(var i=0; i<sb.length; i++) {
       queue()
-        .defer(d3.json, 'js/json/states/'+sb[i].name+'/brew_style.json')
+        .defer(d3.json, 'js/json/states/'+sb[i].name+'/state_styles.json')
         .await(function(err, bb){
           if(!err) {
-            _this.s[bb.name] = bb;
-
+            _this.s[bb.name] = bb.beers;
+            // console.log(bb.name + " loaded");
           } else {
             console.log(err);
           }
         });
     }
+    // queue()
+    //   .defer(d3.json, 'js/')
+
+    // Export module
+    this.states = states;
+    this.beers = beers;
+    this.scroll = scroll;
+    this.curr_axis_group = curr_axis_group;
+    this.curr_axis = curr_axis;
+
+    this.redrawMap();
 
   }
 
-  MapVis.prototype.redrawMap = function() {
+  MapVis.prototype.redrawMap = function(style) {
+    var all_str = "All styles";
+    style = style || "Scotch Ale / Wee Heavy";
+    var _this = this;
+
+    setTimeout(function() {
+      _this.sb.forEach(function(state, i, sb){
+        // state.ravg = _this.s[state.name].brewery[0].ravg;
+        // state.beer_count = _this.s[state.name].brewery[0].beer_count;
+        if(style != all_str){
+          var beer_map = (_this._sl[style].length>0)? _.map(_this._sl[style], function (style_name) { return _this.s[state.name][style_name]}) : _this.s[state.name][style],
+              combined_beers = _.reduce(beer_map, function(mem, n) { return (n)? mem.concat(n):mem; }, []),
+              beer_reduce = _.reduce(combined_beers, function(mem, beer) { 
+                if(!(beer.name in mem.keys)) {
+                  mem.beers.push(beer);
+                  mem.keys[beer.name] = 1;
+                }
+                return mem; 
+              }, {beers:[], keys:{}}),
+              filtered_beers = _.filter(beer_reduce.beers, function(beer) { return beer.revs >= _this.options.min_revs}),
+              sorted_beers = _.sortBy(filtered_beers, 'ravg'),
+              ravg_filter = _.filter(beer_reduce.beers, function(beer) { return beer.ravg != '-'});
+
+          state.beers = sorted_beers;
+          state.beer_count = ravg_filter.length;
+          state.ravg = Math.round((_.reduce(ravg_filter, function(mem, beer){ return mem+beer.ravg; }, 0.0))/state.beer_count*100)/100;
+        } else {
+          state.beers = [];
+          state.beer_count = _this._sb[i].beer_count;
+          state.ravg = this._sb[i].ravg;
+        
+        }
+        _this.style = style;
+      });
+
+      setMinMax.call(_this);
+
+      _this.states
+        .transition().duration(_this.options.transition_duration)
+          .style("fill", function(d, i) {
+            var _c;
+            if (_this.sb[i].beer_count > 0)
+              _c = _this.color(_this.sb[i].ravg);
+            else
+              _c = '#888'
+            return _c;
+          });
+
+      _this.beers
+        .transition().duration(_this.options.transition_duration)
+          .attr("transform", function(d, i){ return transformBeer.call(_this, d, i, _this.sb); })
+          .style("opacity", function(d, i) {return (_this.sb[i].beer_count>0)? 1: 0});
+
+      _this.scroll
+        .transition().duration(_this.options.transition_duration)
+          .attr("transform", "translate("+_this.scrollScale(_this.min_rating)+",0)")
+          .attr("width", _this.scrollScale(_this.max_rating-_this.min_rating));
+
+      _this.curr_axis.selectAll('.first')
+        .transition().duration(_this.options.transition_duration)
+          .attr("transform", "translate(" + _this.scrollScale(_this.min_rating) + ",0)");
+      _this.curr_axis.select('text.first').text(Math.round(_this.min_rating*100)/100);
+      _this.curr_axis.selectAll('.second')
+        .transition().duration(_this.options.transition_duration)
+          .attr("transform", "translate(" + _this.scrollScale(_this.max_rating) + ",0)");    
+      _this.curr_axis.select('text.second').text(Math.round(_this.max_rating*100)/100);
+
+
+    }, 2000);
 
   }
 

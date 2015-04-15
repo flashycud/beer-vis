@@ -9,5 +9,5 @@ define([
 ],
 function(d3, $, _, /*DataHandler, ParallelCoordinates,*/ MapVis ) {
 
-  new MapVis();
+  x = new MapVis();
 });
