@@ -261,10 +261,10 @@ define([
 
   MapVis.prototype.redrawMap = function(style) {
     var all_str = "All styles";
-    style = style || "Scotch Ale / Wee Heavy";
+    style = style || all_str;
     var _this = this;
 
-    setTimeout(function() {
+    // setTimeout(function() {
       _this.sb.forEach(function(state, i, sb){
         // state.ravg = _this.s[state.name].brewery[0].ravg;
         // state.beer_count = _this.s[state.name].brewery[0].beer_count;
@@ -288,7 +288,7 @@ define([
         } else {
           state.beers = [];
           state.beer_count = _this._sb[i].beer_count;
-          state.ravg = this._sb[i].ravg;
+          state.ravg = _this._sb[i].ravg;
         
         }
         _this.style = style;
@@ -327,7 +327,7 @@ define([
       _this.curr_axis.select('text.second').text(Math.round(_this.max_rating*100)/100);
 
 
-    }, 2000);
+    // }, 2000);
 
   }
 

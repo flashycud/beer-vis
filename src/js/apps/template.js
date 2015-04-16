@@ -22,6 +22,13 @@ function($, d3) {
       $('.ravg', map).html(data.ravg);
       $('.style', map).html(style);
       $('.count', map).html(data.beer_count + ((data.beer_count>1)? " beers":" beer"));
+
+      if (data.beers) {
+        var beer_list = _.reduce(data.beers, function(beer) {
+
+        });
+        $('.beers', map).html()
+      }
       target.css({
         top: y -150,
         left: x-150
