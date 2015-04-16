@@ -14,9 +14,9 @@ function(d3, $, _, /*DataHandler, ParallelCoordinates,*/ MapVis ) {
       cur_state = '';
 
 
-  var mapVis = new MapVis(d3.select('#map-vis',{
-    color_range: [d3.rgb(204,226,228),d3.rgb(160,171,100)]
-  }));
+  var mapVis = new MapVis(d3.select('#map-vis'),{
+    color_range: [d3.rgb(204,226,228),d3.rgb(0,139 ,149)]
+  });
   mapVis.registerUpdate(update);
 
   var wordVis;
