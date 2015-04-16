@@ -9,7 +9,17 @@ define([
 ],
 function(d3, $, _, /*DataHandler, ParallelCoordinates,*/ MapVis ) {
 
+  var cur_style_lvl = 1,
+      cur_style = '',
+      cur_state = '';
+
+
   var mapVis = new MapVis(d3.select('#map-vis'));
+  mapVis.registerUpdate(update);
+
+  var wordVis;
+
+  var barVis;
   
   $('#style').change(function(e){
     mapVis.redrawMap($(this).val());
@@ -17,9 +27,11 @@ function(d3, $, _, /*DataHandler, ParallelCoordinates,*/ MapVis ) {
 
 
   function update(){
-    var state = mapVis.getSelectedState(),
-        style,
-        style_level;
+    cur_state = mapVis.getSelectedState();
+
+    wordVis.updateWordCloud(cur_style_lvl, cur_style, cur_state);
+    barVis.updateBars(cur_style_lvl, cur_style, cur_state);
+    mapVis.updateMap(cur_style);
 
   }
 });

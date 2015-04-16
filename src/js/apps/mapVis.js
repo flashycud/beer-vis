@@ -93,6 +93,8 @@ define([
     this.max_beer = d3.max(this.sb, function(d) { return d.beer_count});
     this.min_beer = d3.min(this.sb, function(d) { return d.beer_count});
 
+    if(this.max_beer <10) this.max_beer =10;
+
     this.color.domain([this.min_rating,this.max_rating]);
     this.scale.domain([this.min_beer,this.max_beer]);
   }
@@ -107,10 +109,11 @@ define([
     this.sb = sb.slice(0);
     this.s = {};
     this.style = undefined;
+    this.selectedState = '';
 
     setMinMax.call(this);
     
-    us_topo = topojson.feature(us, us.objects.states).features;
+    this.us_topo = us_topo = topojson.feature(us, us.objects.states).features;
 
     
 
@@ -150,10 +153,11 @@ define([
         .attr("d", this.path)
         .attr("class", "state-boundary overlay")
         .on('mouseover', function(d, i){
-          if(_this.sb[i].beer_count>0){
+          if(_this.sb[i].beer_count>0 && _this.selectedState == ''){
             states_group.select(".state-boundary-"+i).style("fill","#E2BF5A");
             var centroid = _this.path.centroid(d),
                 _data = {
+                  i: i,
                   title: _this.sb[i].name,
                   ravg: Math.round(_this.sb[i].ravg*100)/100,
                   style: _this.style,
@@ -164,13 +168,38 @@ define([
           }
         })
         .on('mouseout', function(d,i) {
-          if(_this.sb[i].beer_count>0){
+          if(_this.sb[i].beer_count>0 && _this.selectedState == ''){
 
             states_group.select(".state-boundary-"+i).style("fill",function(){
               return _this.color(_this.sb[i].ravg);
             });
-          }
           template.deactivateMapPopup();
+          }
+        })
+        .on('click', function(d, i) {
+          // if(_this.updateFunction){
+            if(_this.selectedState != '') {
+              _this.selectedState = '';
+
+              deselect.call(_this, i);
+              template.deactivateMapPopup();
+
+            } else if(_this.sb[i].beer_count>0 && _this.selectedState == '') {
+              _this.selectedState = _this.sb[i].name;
+              // _this.updateFunction();
+              select.call(_this, i);
+              var centroid = _this.path.centroid(d),
+                _data = {
+                  i:i,
+                  title: _this.sb[i].name,
+                  ravg: Math.round(_this.sb[i].ravg*100)/100,
+                  style: _this.style,
+                  beer_count: _this.sb[i].beer_count,
+                  beers: _this.sb[i].beers
+                }
+              template.activateMapPopup(popup, centroid[0], centroid[1], _data);
+            }
+          // }
         });
 
     // Scroll 
@@ -250,19 +279,33 @@ define([
 
     // Export module
     this.states = states;
+    this.states_overlay = states_overlay;
     this.beers = beers;
     this.scroll = scroll;
     this.curr_axis_group = curr_axis_group;
     this.curr_axis = curr_axis;
-
-    this.redrawMap();
+    this.popup = popup;
 
   }
 
+  MapVis.prototype.updateMap = function(style) {
+    this.redrawMap(style);
+  }
+  MapVis.prototype.registerUpdate = function(update_function) {
+    this.updateFunction = update_function;
+  }
+  MapVis.prototype.getSelectedState = function() {
+    return this.selectedState;
+  }
+
+
   MapVis.prototype.redrawMap = function(style) {
     var all_str = "All styles";
-    style = style || all_str;
-    var _this = this;
+    style = (style && style !='')? style: all_str;
+    var _this = this,
+        active_i = template.getMapActivatedIndex();
+
+    _this.style = style;
 
     // setTimeout(function() {
       _this.sb.forEach(function(state, i, sb){
@@ -278,20 +321,37 @@ define([
                 }
                 return mem; 
               }, {beers:[], keys:{}}),
-              filtered_beers = _.filter(beer_reduce.beers, function(beer) { return beer.revs >= _this.options.min_revs}),
+              filtered_beers = (beer_reduce.beers>6)? _.filter(beer_reduce.beers, function(beer) { return beer.revs >= _this.options.min_revs}): beer_reduce.beers,
               sorted_beers = _.sortBy(filtered_beers, 'ravg'),
               ravg_filter = _.filter(beer_reduce.beers, function(beer) { return beer.ravg != '-'});
 
           state.beers = sorted_beers;
           state.beer_count = ravg_filter.length;
           state.ravg = Math.round((_.reduce(ravg_filter, function(mem, beer){ return mem+beer.ravg; }, 0.0))/state.beer_count*100)/100;
+
         } else {
           state.beers = [];
           state.beer_count = _this._sb[i].beer_count;
           state.ravg = _this._sb[i].ravg;
         
         }
-        _this.style = style;
+
+        //map-popup
+        if (i == active_i) {
+          if(_this.selectedState != ''){
+            var centroid = _this.path.centroid(_this.us_topo[i]),
+              _data = {
+                i:i,
+                title: _this.sb[i].name,
+                ravg: Math.round(_this.sb[i].ravg*100)/100,
+                style: _this.style,
+                beer_count: _this.sb[i].beer_count,
+                beers: _this.sb[i].beers
+              }
+            template.activateMapPopup(_this.popup, centroid[0], centroid[1], _data);
+          }
+        }
+
       });
 
       setMinMax.call(_this);
@@ -299,12 +359,15 @@ define([
       _this.states
         .transition().duration(_this.options.transition_duration)
           .style("fill", function(d, i) {
-            var _c;
-            if (_this.sb[i].beer_count > 0)
-              _c = _this.color(_this.sb[i].ravg);
-            else
-              _c = '#888'
-            return _c;
+            if(i != active_i) {
+              var _c;
+              if (_this.sb[i].beer_count > 0)
+                _c = _this.color(_this.sb[i].ravg);
+              else
+                _c = '#888'
+              return _c;
+            }
+            return '#E2BF5A'
           });
 
       _this.beers
@@ -312,23 +375,93 @@ define([
           .attr("transform", function(d, i){ return transformBeer.call(_this, d, i, _this.sb); })
           .style("opacity", function(d, i) {return (_this.sb[i].beer_count>0)? 1: 0});
 
-      _this.scroll
-        .transition().duration(_this.options.transition_duration)
-          .attr("transform", "translate("+_this.scrollScale(_this.min_rating)+",0)")
-          .attr("width", _this.scrollScale(_this.max_rating-_this.min_rating));
+      if(_this.min_rating) {
+        _this.scroll
+          .transition().duration(_this.options.transition_duration)
+            .attr("transform", "translate("+_this.scrollScale(_this.min_rating)+",0)")
+            .attr("width", _this.scrollScale(_this.max_rating-_this.min_rating))
+            .style("opacity", 1);
+      } else {
+        _this.scroll
+          .transition().duration(_this.options.transition_duration)
+            .style("opacity", 0);
+      }
 
-      _this.curr_axis.selectAll('.first')
-        .transition().duration(_this.options.transition_duration)
-          .attr("transform", "translate(" + _this.scrollScale(_this.min_rating) + ",0)");
-      _this.curr_axis.select('text.first').text(Math.round(_this.min_rating*100)/100);
-      _this.curr_axis.selectAll('.second')
-        .transition().duration(_this.options.transition_duration)
-          .attr("transform", "translate(" + _this.scrollScale(_this.max_rating) + ",0)");    
-      _this.curr_axis.select('text.second').text(Math.round(_this.max_rating*100)/100);
+      if(_this.min_rating) {
+        _this.curr_axis.selectAll('.first')
+          .transition().duration(_this.options.transition_duration)
+            .attr("transform", "translate(" + _this.scrollScale(_this.min_rating) + ",0)")
+            .style("opacity", 1);
+        _this.curr_axis.select('text.first').text(Math.round(_this.min_rating*100)/100)
+            .style("opacity", 1);
+        _this.curr_axis.selectAll('.second')
+          .transition().duration(_this.options.transition_duration)
+            .attr("transform", "translate(" + _this.scrollScale(_this.max_rating) + ",0)")  
+            .style("opacity", 1);
+        _this.curr_axis.select('text.second').text(Math.round(_this.max_rating*100)/100)
+            .style("opacity", 1);
+      } else {
+        _this.curr_axis.selectAll('.first')
+          .transition().duration(_this.options.transition_duration)
+            .style("opacity", 0);
+        _this.curr_axis.select('text.first').text(Math.round(_this.min_rating*100)/100)
+            .style("opacity", 0);
+        _this.curr_axis.selectAll('.second')
+          .transition().duration(_this.options.transition_duration)
+            .style("opacity", 0);
+        _this.curr_axis.select('text.second').text(Math.round(_this.max_rating*100)/100)
+            .style("opacity", 0);
+      }
+
 
 
     // }, 2000);
 
+  }
+
+  function deselect(_i) {
+    var _this = this;
+    this.states
+      .transition().duration(_this.options.transition_duration)
+        .style("fill",function(d,i) {
+          var _c;
+            if (_this.sb[i].beer_count > 0)
+              _c = _this.color(_this.sb[i].ravg);
+            else
+              _c = '#888'
+            return _c;
+        })
+        .style("stroke",function(d,i) {
+          return '#fff';
+        })
+        .style("opacity",function(d,i) {
+          return 1;
+        });
+    this.popup.style("z-index",0);
+  }
+
+  function select(_i) {
+    var _this = this;
+    this.states
+      .transition().duration(_this.options.transition_duration)
+        .style("fill",function(d,i) {
+          if(i==_i) {
+            return '#E2BF5A';
+          }
+          var _c;
+          if (_this.sb[i].beer_count > 0)
+            _c = _this.color(_this.sb[i].ravg);
+          else
+            _c = '#888'
+          return _c;
+        })
+        .style("stroke",function(d,i) {
+          return (i==_i)? '#000': '#fff';
+        })
+        .style("opacity",function(d,i) {
+          return (i==_i)? 1: 0.6;
+        });
+    this.popup.style("z-index",1);
   }
 
   function transformBeer(d, i, sb) {

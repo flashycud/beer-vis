@@ -21,6 +21,13 @@ time, mark, audio, video {
   color: #3D3D3D;
   font-size: 1rem;
   line-height: 1.5;
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure, 
@@ -103,13 +110,7 @@ article.project {
 text {
   font-size: 12px;
 }
-ul {
-  margin-bottom: 20px;
-}
-li {
-  list-style-type: decimal;
-  padding: 5px;
-}
+
 .left {
   float:left;
   width: 200px;
@@ -142,11 +143,12 @@ svg.map.overlay{
   z-index: 1;
 }
 .state-boundary {
-  fill: transparent;
+  fill: rgba(250,250,250,0);
   stroke: #FFF;
 }
 .state-boundary.overlay{
   stroke: none;
+  cursor: pointer;
 }
 
 .hidden {
@@ -253,6 +255,49 @@ svg.map.overlay{
   padding-left: 10px;
 }
 
+.map-popup ul {
+  margin-top: 6px;
+  overflow: hidden;
+  height: 62px;
+}
+.map-popup li {
+  font-size: 0.6rem;
+  overflow: hidden;
+  background-color: #F7F7F7;
+  position: relative;
+  width: 210px;
+  line-height: 1;
+}
+.map-popup li div{
+  display: block;
+  position: absolute;
+  /*width: 30px;*/
+}
+.map-popup li div.beer-name{
+  position: relative;
+  font-size: 0.6rem;
+  color: #888;
+  white-space: nowrap;
+  left: 75px;
+  /*width: 135px;*/
+}
+.map-popup li:after{
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  content: "";
+  background-image: -webkit-gradient(linear,left top,right top,color-stop(0%,rgba(247,247,247,0)),color-stop(100%,rgba(247,247,247,1)));
+  background-image: -webkit-linear-gradient(left,rgba(247,247,247,0),rgba(247,247,247,1));
+  background-image: -moz-linear-gradient(left,rgba(247,247,247,0),rgba(247,247,247,1));
+  background-image: -ms-linear-gradient(left,rgba(247,247,247,0),rgba(247,247,247,1));
+  background-image: -o-linear-gradient(left,rgba(247,247,247,0),rgba(247,247,247,1));
+  background: linear-gradient(to right,rgba(247,247,247,0),rgba(247,247,247,1));
+  filter: progid:DXImageTransform.Microsoft.gradient(GradientType=1,StartColorStr='#00f7f7f7',EndColorStr='#f7f7f7');
+
+}
 
 #map-vis {
   position:relative;
