@@ -24,15 +24,16 @@ function(d3, $, _, /*DataHandler, ParallelCoordinates,*/ MapVis ) {
   var barVis;
   
   $('#style').change(function(e){
-    mapVis.redrawMap($(this).val());
+    cur_style = $(this).val();
+    update();
   });
 
 
   function update(){
     cur_state = mapVis.getSelectedState();
 
-    wordVis.updateWordCloud(cur_style_lvl, cur_style, cur_state);
-    barVis.updateBars(cur_style_lvl, cur_style, cur_state);
+    // wordVis.updateWordCloud(cur_style_lvl, cur_style, cur_state, beer);
+    // barVis.updateBars(cur_style_lvl, cur_style, cur_state);
     mapVis.updateMap(cur_style);
 
   }
