@@ -4,9 +4,11 @@ define([
 ],
 function (d3, d3tip){
 
+  var style;
+
   function TreeVis(update_function) {
     // console.log("test")
-    var style;
+    // var style;
 
     var w = 600,
         h = 200,
@@ -70,9 +72,11 @@ function (d3, d3tip){
         .on('dblclick', function(d) {
         // console.log(d);
         style = d.name;
+        update_function();
       });
 
       function click(d) {
+        // console.log("test")
         if (!d.children) return;
 
         kx = (d.y ? w - 40 : w) / (1 - d.y);
@@ -94,7 +98,7 @@ function (d3, d3tip){
 
         d3.event.stopPropagation();
 
-        update_function();
+        
       }
 
       function transform(d) {
@@ -104,6 +108,6 @@ function (d3, d3tip){
 
   }
 
-  return {update: TreeVis, getStyle: function(style){return style;}};
+  return {update: TreeVis, getStyle: function(){return style;}};
 });
 // TreeVis(function(){console.log()});
