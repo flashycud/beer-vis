@@ -194,7 +194,8 @@ define([
           if(_this.updateFunction){
             if(_this.selectedState != '') {
               _this.selectedState = '';
-
+              
+              _this.updateFunction();
               deselect.call(_this, i);
               template.deactivateMapPopup();
 
