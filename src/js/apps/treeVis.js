@@ -3,6 +3,7 @@ define([
   'd3tip'
 ],
 function (d3, d3tip){
+
 function TreeVis(update_function) {
 
   var style;
@@ -102,6 +103,6 @@ function TreeVis(update_function) {
   });
 }
 
-return TreeVis;
+return {update: TreeVis, getStyle: function(){return style;}};
 });
 // TreeVis(function(){console.log()});
