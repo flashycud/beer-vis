@@ -8,8 +8,8 @@ function TreeVis(update_function) {
 
   var style;
 
-  var w = 1120,
-      h = 600,
+  var w = 600,
+      h = 200,
       x = d3.scale.linear().range([0, w]),
       y = d3.scale.linear().range([0, h]);
 

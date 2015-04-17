@@ -25,10 +25,18 @@ function(d3, $, _, MapVis, TreeVis, DetailVis) {
 
   var barVis;
   
+<<<<<<< HEAD
   $('#style').change(function(e){
     mapVis.redrawMap($(this).val());
     update();
   });
+=======
+  // $('#style').change(function(e){
+  //   mapVis.updateMap($(this).val());
+  //   cur_style = $(this).val();
+  //   update();
+  // });
+>>>>>>> origin/master
 
   function update(){
     cur_state = mapVis.getSelectedState();

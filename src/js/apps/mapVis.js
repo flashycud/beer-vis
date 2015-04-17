@@ -10,15 +10,15 @@ define([
 
 
   var _options = {
-    width: 960,
+    width: 700,
     height: 600,
 
     color_range: [d3.rgb(240,240,240),d3.rgb(29,145,145)],
 
-    scroll_x: 200,
-    scroll_y: 520,
-    scroll_width: 600,
-    scroll_height: 25,
+    scroll_x: 130,
+    scroll_y: 420,
+    scroll_width: 400,
+    scroll_height: 20,
 
     transition_duration: 500,
 
@@ -53,7 +53,11 @@ define([
           height:this.options.height
         });
 
-    this.path = d3.geo.path();
+    var projection = d3.geo.albersUsa()
+      .scale(880)
+      .translate([350,200]);
+
+    this.path = d3.geo.path().projection(projection);
     this.color = d3.scale.linear().range(this.options.color_range);  
     this.scale = d3.scale.linear().range([0.5, 5]);
     this.scrollScale = d3.scale.linear().domain([0,5]).range([0, this.options.scroll_width]);
@@ -82,6 +86,7 @@ define([
         .defer(d3.json, "js/json/styles.json")
         .await(function() { 
           drawMapVis.apply(_this, arguments); 
+          _this.updateFunction();
         });
     
 
@@ -112,6 +117,8 @@ define([
     this.selectedState = '';
 
     setMinMax.call(this);
+
+
     
     this.us_topo = us_topo = topojson.feature(us, us.objects.states).features;
 
@@ -129,7 +136,7 @@ define([
         .style("fill", function(d, i){
           return _this.color(_this.sb[i].ravg);
         })
-      .append("title").text(function(d){return d.id});
+      .append("title").text(function(d){return d.id})
 
     // Beer icons
     beers_group = this.svg.append('svg:g');
@@ -180,7 +187,8 @@ define([
           // if(_this.updateFunction){
             if(_this.selectedState != '') {
               _this.selectedState = '';
-
+              
+              _this.updateFunction();
               deselect.call(_this, i);
               template.deactivateMapPopup();
 

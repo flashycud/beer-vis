@@ -425,6 +425,7 @@ svg.map.overlay{
   color: #999;
 }
   .d3-tip {
+  z-index:3;
   line-height: 1;
   /*font-weight: bold;*/
   padding: 12px;
@@ -518,6 +519,11 @@ svg.map.overlay{
   pointer-events: none;
 }
 
-
+input[type="radio"] {
+  position:relative;
+  display: inline-block;
+  margin: 9px;
+  z-index:1;
+}
 
 
