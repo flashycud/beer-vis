@@ -309,7 +309,8 @@ define([
 
   MapVis.prototype.redrawMap = function(style) {
     var all_str = "All styles";
-    style = (style && style !='')? style: all_str;
+    style = (style && style!= 'All' && style != '')? style: all_str;
+    console.log(style);
     var _this = this,
         active_i = template.getMapActivatedIndex();
 
