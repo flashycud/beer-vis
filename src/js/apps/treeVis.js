@@ -4,9 +4,11 @@ define([
 ],
 function (d3, d3tip){
 
+var style;
+var stylelvl;
 function TreeVis(update_function) {
 
-  var style;
+  
 
   var w = 600,
       h = 200,
@@ -103,6 +105,6 @@ function TreeVis(update_function) {
   });
 }
 
-return {update: TreeVis, getStyle: function(){return style;}};
+return {update: TreeVis, getStyle: function(){return style;}, getStyleLvl: function() { return stylelvl;}};
 });
 // TreeVis(function(){console.log()});
