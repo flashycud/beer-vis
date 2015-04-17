@@ -7,14 +7,24 @@ define([
 
 function (d3, d3tip,  Radar, Wordcloud) {
 	
+	function componentToHex(c) {
+    	var hex = c.toString(16);
+    	return hex.length == 1 ? "0" + hex : hex;
+	}
+
+	function rgbToHex(r, g, b) {
+    	return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+	}
 
 	/* Dummy global variables */
 	var cur_style 		= null;
 	var cur_style_lvl	= 1;
 	var cur_state		= null;
 
-	/* Global variables for radar chart */
+	/* Global variables for bar chart */
+	var feature_dict = {"overall":0, "appearance":1, "aroma":2, "palate":3, "taste":4};
 
+	/* Global variables for radar chart */
 	var data = [];
 	var dataset = [];
 
@@ -37,9 +47,10 @@ function (d3, d3tip,  Radar, Wordcloud) {
 
 	var radardata = raw_radar_data.slice();
 
-	/* Global variables for word cloud */
-	var fill = d3.scale.category20();
+	/* Global variables for bar chart */
+	var fill = [[146, 190, 217], [132, 185, 168], [196, 200, 76], [232, 177, 83], [240, 161, 157]];
 	var word_list = [];
+
 
 	/* Initialize word cloud svg */
 	var wordcloud_g = d3.select(".wordcloud").append("svg")
@@ -54,7 +65,10 @@ function (d3, d3tip,  Radar, Wordcloud) {
 	.enter().append("text")
 	.style("font-size", function(d) { return d.size + "px"; })
 	.style("font-family", "Impact")
-	.style("fill", function(d, i) { return fill(i); })
+	.style("fill", function(d, i) { 
+		var index = Math.floor(Math.random() * 5);
+		return rgbToHex(fill[index][0], fill[index][1], fill[index][2]); 
+	})
 	.attr("text-anchor", "middle")
 	.attr("transform", function(d) {
 		return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
@@ -70,7 +84,10 @@ function (d3, d3tip,  Radar, Wordcloud) {
 	 	
 	 	texts.style("font-size", function(d) { return d.size + "px"; })
 	 	.style("font-family", "Impact")
-	 	.style("fill", function(d, i) { return fill(i); })
+	 	.style("fill", function(d, i) { 
+	 		var index = Math.floor(Math.random() * 5);
+			return rgbToHex(fill[index][0], fill[index][1], fill[index][2]); 
+	 	})
 	 	.attr("text-anchor", "middle")
 	 	.attr("transform", function(d) {
 	 		return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
@@ -237,7 +254,10 @@ function (d3, d3tip,  Radar, Wordcloud) {
 		return x(d.key);
 	})
 	.attr('y', function(d) { return height - y(d.value)} )
-	.attr('fill', '#ff7e47')
+	.attr('fill', function(d, i) {
+		var index = feature_dict[feature];
+		return rgbToHex(fill[index][0], fill[index][1], fill[index][2]); 
+	})
 
 	g.selectAll('.label')
 	.data(dataset, key)
@@ -309,7 +329,6 @@ function (d3, d3tip,  Radar, Wordcloud) {
 	    var sortTimeout = setTimeout(function() {
 
 	    	dataTransform(data);
-	    		 // console.log(dataset)
 
 			x.domain(dataset.map(function(d) { return d.key }));
 			y.domain([d3.min(dataset, function(d) { return d.value; }),
@@ -321,9 +340,9 @@ function (d3, d3tip,  Radar, Wordcloud) {
 	        var bars = g.selectAll('.bar').data(dataset, key);
 
 			//Enter 
-			bars.enter()
-			.append('rect')
-			.attr('class', 'bar')
+			bars.enter().append('rect');
+
+			bars.attr('class', 'bar')
 			.attr('x', function(d, i) { 
 				return width;
 			})
@@ -333,7 +352,11 @@ function (d3, d3tip,  Radar, Wordcloud) {
 			.attr('height', function(d) {
 				return y(d.value);
 			})
-			.attr('fill', '#ff7e47')
+			.attr('fill', function(d, i) {
+				console.log(d);
+				var index = feature_dict[feature];
+				return rgbToHex(fill[index][0], fill[index][1], fill[index][2]); 
+			})
 			.on('mouseover', function(d, i) {
 				d3.select(this)
 				.attr('fill', '#428bca');
@@ -349,7 +372,10 @@ function (d3, d3tip,  Radar, Wordcloud) {
 				d3.select(this)
 				.transition()
 				.duration(250)
-				.attr('fill', '#FF7E47');
+				.attr('fill', function(d, i) {
+					var index = feature_dict[feature];
+					return rgbToHex(fill[index][0], fill[index][1], fill[index][2]); 
+				});
 				tip.hide(d);
 
 				temp_list = [];
