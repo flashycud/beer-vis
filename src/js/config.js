@@ -8,7 +8,7 @@ requirejs.config({
     jquery: 'lib/jquery/dist/jquery',
     underscore: 'lib/underscore/underscore',
     text: 'lib/requirejs-text/text',
-    json: 'lib/requirejs-plugins/src/json',
+    json: 'lib/requirejs-plugins/src/json'
   }
 });
 

@@ -4,10 +4,11 @@ define([
   'underscore',
   // './apps/dataHandler',
   // './apps/parallelCoordinates'
-  './apps/mapVis'
+  './apps/mapVis',
+  './apps/test'
 
 ],
-function(d3, $, _, /*DataHandler, ParallelCoordinates,*/ MapVis ) {
+function(d3, $, _, /*DataHandler, ParallelCoordinates,*/ MapVis ,Test) {
 
   var cur_style_lvl = 1,
       cur_style = '',

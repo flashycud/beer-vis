@@ -184,7 +184,7 @@ define([
           }
         })
         .on('click', function(d, i) {
-          // if(_this.updateFunction){
+          if(_this.updateFunction){
             if(_this.selectedState != '') {
               _this.selectedState = '';
 
@@ -193,7 +193,7 @@ define([
 
             } else if(_this.sb[i].beer_count>0 && _this.selectedState == '') {
               _this.selectedState = _this.sb[i].name;
-              // _this.updateFunction();
+              _this.updateFunction();
               select.call(_this, i);
               var centroid = _this.path.centroid(d),
                 _data = {
@@ -206,7 +206,7 @@ define([
                 }
               template.activateMapPopup(popup, centroid[0], centroid[1], _data);
             }
-          // }
+          }
         });
 
     // Scroll 
