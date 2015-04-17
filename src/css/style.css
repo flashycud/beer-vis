@@ -36,6 +36,7 @@ footer, header, hgroup, menu, nav, section {
 }
 body {
   line-height: 1;
+
 }
 ol, ul {
   list-style: none;
@@ -339,3 +340,184 @@ svg.map.overlay{
 .curr-axis polygon.second {
   fill: #000;
 }
+
+/* this is the css for treeVis*/
+
+#treeVis #chart, #header, #footer {
+  position: relative;
+  top: 0;
+}
+
+#treeVis #header, #footer {
+  z-index: 1;
+  display: block;
+  font-size: 36px;
+  font-weight: 300;
+  text-shadow: 0 1px 0 #fff;
+}
+
+#treeVis #header.inverted, #footer.inverted {
+  color: #fff;
+  text-shadow: 0 1px 4px #000;
+}
+
+#treeVis #header {
+  top: 80px;
+  left: 140px;
+  width: 1000px;
+}
+
+#treeVis #footer {
+  top: 680px;
+  right: 140px;
+  text-align: right;
+}
+
+#treeVis rect {
+  fill: none;
+  pointer-events: all;
+}
+
+#treeVis pre {
+  font-size: 18px;
+}
+
+#treeVis line {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+#treeVis .string, .regexp {
+  color: #f39;
+}
+
+#treeVis .keyword {
+  color: #00c;
+}
+
+#treeVis .comment {
+  color: #777;
+  font-style: oblique;
+}
+
+#treeVis .number {
+  color: #369;
+}
+
+#treeVis .class, .special {
+  color: #1181B8;
+}
+
+#treeVis a:link, a:visited {
+  color: #000;
+  text-decoration: none;
+}
+
+#treeVis a:hover {
+  color: #666;
+}
+
+  .hint {
+  position: absolute;
+  right: 0;
+  width: 1280px;
+  font-size: 12px;
+  color: #999;
+}
+  .d3-tip {
+  line-height: 1;
+  /*font-weight: bold;*/
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+  .d3-tip strong{
+  
+  color: #fff;
+  
+}
+ .d3-tip span strong{
+  color: red;
+  
+}
+/* Creates a small triangle extender for the tooltip */
+  .d3-tip:after strong{
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+ .d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+} 
+
+#treeVis .chart {
+  display: block;
+  margin: auto;
+  margin-top: 60px;
+  font-size: 11px;
+  font-weight: 500;
+
+}
+
+
+#treeVis rect {
+  stroke: #000;
+  fill: #aaa;
+  fill-opacity: .8;
+}
+
+#treeVis rect.parent {
+  cursor: pointer;
+
+  fill: rgb(192,72,24);
+}
+
+#treeVis rect.parent + text {
+  font-weight: 700;
+  /*font-color: white;*/
+  font-size: 30px;
+}
+
+#treeVis rect.parent1 {
+  cursor: pointer;
+  fill: rgb(202,104,42);
+
+}
+
+#treeVis rect.parent1 + text{
+  font-weight: 500;
+  font-size: 20px;
+}
+
+#treeVis rect.parent2 {
+  cursor: pointer;
+  fill: rgb(248, 242, 163);
+}
+
+#treeVis rect.parent2 + text{
+  font-weight: 500;
+  font-size: 14px;
+}
+#treeVis rect.parent3 {
+  cursor: pointer;
+  fill: rgb(232, 155, 42);
+}
+
+#treeVis text {
+  pointer-events: none;
+}
+
+
+
+

@@ -6,14 +6,11 @@
   <link rel="stylesheet" type="text/css" href="css/style.css">
   <script src="js/lib/requirejs/require.js"></script>
   <script src="js/config.js"></script>
+  <link rel="stylesheet" href="css/radar-chart.css">
+  <link rel="stylesheet" type="text/css" href="css/bar.css">
+  <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
 </head>
 <body>
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-  <>
-=======
->>>>>>> Stashed changes
 <div><select id="style">
 <option value='All styles' > - </option>
 <option value='Ale' > Ale </option>
@@ -137,13 +134,11 @@
 <option value='Happoshu' > Happoshu </option>
 <option value='Japanese Rice Lager' > Japanese Rice Lager </option>
 </select></div>
-  
-  <div id="map-vis"></div>
 
-<<<<<<< Updated upstream
-=======
->>>>>>> origin/master
->>>>>>> Stashed changes
+<div>
+<div id="treeVis"></div>
+
+  <div id="map-vis"></div>
   <div id="template" class="hidden">
     <div class="map-popup">
       <div class="arrow-bg"></div>
@@ -158,7 +153,35 @@
       <div class="ravg"></div>
     </div>
   </div>
+</div>
 
+
+<div class="container-fluid">
+    <div class="page-header">
+      <h1>Sorting D3 Bars</h1>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <form >
+          <input type="radio" name="feature" value="overall" checked>Overall
+          <br>
+          <input type="radio" name="feature" value="appearance">Appearance
+          <br>
+          <input type="radio" name="feature" value="aroma">Aroma
+          <br>
+          <input type="radio" name="feature" value="palate">Palate
+          <br>
+          <input type="radio" name="feature" value="taste">Taste
+        </form>
+      </div>
+
+      
+      <div class="vis" id="vis"></div>
+      <div class="chart-container"></div>
+    </div>
+  </div>
+
+  
 </body>
 
 </html>
