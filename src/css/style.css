@@ -151,6 +151,10 @@ svg.map.overlay{
   stroke: none;
   cursor: pointer;
 }
+.control .first,
+.control .second{
+  cursor: pointer;
+}
 
 .hidden {
   display:none;

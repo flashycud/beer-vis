@@ -26,14 +26,22 @@ function(d3, $, _, MapVis, TreeVis, DetailVis) {
   var barVis;
   
   $('#style').change(function(e){
+<<<<<<< HEAD
     mapVis.redrawMap($(this).val());
+=======
+    cur_style = $(this).val();
+>>>>>>> origin/master
     update();
   });
 
   function update(){
     cur_state = mapVis.getSelectedState();
 
+<<<<<<< HEAD
     // wordVis.updateWordCloud(cur_style_lvl, cur_style, cur_state);
+=======
+    // wordVis.updateWordCloud(cur_style_lvl, cur_style, cur_state, beer);
+>>>>>>> origin/master
     // barVis.updateBars(cur_style_lvl, cur_style, cur_state);
     mapVis.updateMap(cur_style);
     updateDetailVis(cur_style_lvl, cur_style, cur_state);

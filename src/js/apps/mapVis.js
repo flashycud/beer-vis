@@ -58,6 +58,12 @@ define([
     this.scale = d3.scale.linear().range([0.5, 5]);
     this.scrollScale = d3.scale.linear().domain([0,5]).range([0, this.options.scroll_width]);
 
+    this.drag = d3.behavior.drag()
+      .origin(function(d) { return d; })
+      .on("dragstart", function(d) { dragstarted.call(this,d, _this); })
+      .on("drag", function(d) { dragged.call(this,d, _this); })
+      .on("dragend", function(d) { dragended.call(this,d, _this); });
+
     this.gradient = this.svg.append("svg:defs")
         .append("svg:linearGradient")
         .attr("id", "rating-gradient")
@@ -88,8 +94,6 @@ define([
   }
 
   function setMinMax() {
-    this.max_rating = d3.max(this.sb, function(d){ return d.ravg});
-    this.min_rating = d3.min(this.sb, function(d){ return d.ravg});
     this.max_beer = d3.max(this.sb, function(d) { return d.beer_count});
     this.min_beer = d3.min(this.sb, function(d) { return d.beer_count});
 
@@ -111,13 +115,16 @@ define([
     this.style = undefined;
     this.selectedState = '';
 
+
+    this.max_rating = d3.max(this.sb, function(d){ return d.ravg});
+    this.min_rating = d3.min(this.sb, function(d){ return d.ravg});
     setMinMax.call(this);
     
     this.us_topo = us_topo = topojson.feature(us, us.objects.states).features;
 
     
 
-    var states_group, states, states_overlay, beers_group, beers, beer, popup, scroll_group, scroll, main_axis, curr_axis,main_axis_group,curr_axis_group;
+    var states_group, states, states_overlay, beers_group, beers, beer, popup, scroll_group, scroll_group_overlay, scroll, main_axis, curr_axis,main_axis_group,curr_axis_group;
 
     // Map
     states_group = this.svg.append('svg:g');
@@ -203,8 +210,13 @@ define([
         });
 
     // Scroll 
-    scroll_group = this.svg_overlay.append('svg:g')
+    scroll_group = this.svg.append('svg:g')
         .attr("transform", "translate("+this.options.scroll_x+","+this.options.scroll_y+")");
+    scroll_group_overlay = this.svg_overlay.append('svg:g')
+        .attr("class", "control")
+        .attr("transform", "translate("+(this.options.scroll_x-5)+","+(this.options.scroll_y-10)+")");
+    
+
     scroll_group.append('svg:rect')
         .attr("width", this.options.scroll_width)
         .attr("height", this.options.scroll_height)
@@ -261,6 +273,27 @@ define([
         .text(Math.round(_this.max_rating*100)/100)
         .attr("transform", "translate(" + this.scrollScale(this.max_rating) + ",0)");
 
+    first_overlay = scroll_group_overlay.append('rect')
+        .datum({x: this.scrollScale(this.min_rating)})
+        .attr("class", "first")
+        .attr("height", this.options.scroll_height + 10)
+        .attr("width", 10)
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("transform", "translate(" + this.scrollScale(this.min_rating) + ",0)")
+        .style("fill", "none")
+        .call(_this.drag);
+    second_overlay = scroll_group_overlay.append('rect')
+        .datum({x: this.scrollScale(this.max_rating)})
+        .attr("class", "second")
+        .attr("height", this.options.scroll_height + 10)
+        .attr("width", 10)
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("transform", "translate(" + this.scrollScale(this.max_rating) + ",0)")
+        .style("fill", "none")
+        .call(_this.drag);
+
 
     for(var i=0; i<sb.length; i++) {
       queue()
@@ -285,11 +318,70 @@ define([
     this.curr_axis_group = curr_axis_group;
     this.curr_axis = curr_axis;
     this.popup = popup;
+    this.first_overlay = first_overlay;
+    this.second_overlay = second_overlay;
+
 
   }
 
   MapVis.prototype.updateMap = function(style) {
-    this.redrawMap(style);
+    var all_str = "All styles";
+    style = (style && style !='')? style: all_str;
+    var _this = this,
+        active_i = template.getMapActivatedIndex();
+
+    _this.style = style;
+
+    _this.sb.forEach(function(state, i, sb){
+      // state.ravg = _this.s[state.name].brewery[0].ravg;
+      // state.beer_count = _this.s[state.name].brewery[0].beer_count;
+      if(style != all_str){
+        var beer_map = (_this._sl[style].length>0)? _.map(_this._sl[style], function (style_name) { return _this.s[state.name][style_name]}) : _this.s[state.name][style],
+            combined_beers = _.reduce(beer_map, function(mem, n) { return (n)? mem.concat(n):mem; }, []),
+            beer_reduce = _.reduce(combined_beers, function(mem, beer) { 
+              if(!(beer.name in mem.keys)) {
+                mem.beers.push(beer);
+                mem.keys[beer.name] = 1;
+              }
+              return mem; 
+            }, {beers:[], keys:{}}),
+            filtered_beers = (beer_reduce.beers>6)? _.filter(beer_reduce.beers, function(beer) { return beer.revs >= _this.options.min_revs}): beer_reduce.beers,
+            sorted_beers = _.sortBy(filtered_beers, 'ravg'),
+            ravg_filter = _.filter(beer_reduce.beers, function(beer) { return beer.ravg != '-'});
+
+        state.beers = sorted_beers;
+        state.beer_count = ravg_filter.length;
+        state.ravg = Math.round((_.reduce(ravg_filter, function(mem, beer){ return mem+beer.ravg; }, 0.0))/state.beer_count*100)/100;
+
+      } else {
+        state.beers = [];
+        state.beer_count = _this._sb[i].beer_count;
+        state.ravg = _this._sb[i].ravg;
+      
+      }
+
+      //map-popup
+      if (i == active_i) {
+        if(_this.selectedState != ''){
+          var centroid = _this.path.centroid(_this.us_topo[i]),
+            _data = {
+              i:i,
+              title: _this.sb[i].name,
+              ravg: Math.round(_this.sb[i].ravg*100)/100,
+              style: _this.style,
+              beer_count: _this.sb[i].beer_count,
+              beers: _this.sb[i].beers
+            }
+          template.activateMapPopup(_this.popup, centroid[0], centroid[1], _data);
+        }
+      }
+
+    });
+
+    this.max_rating = d3.max(this.sb, function(d){ return d.ravg});
+    this.min_rating = d3.min(this.sb, function(d){ return d.ravg});
+
+    this.redrawMap();
   }
   MapVis.prototype.registerUpdate = function(update_function) {
     this.updateFunction = update_function;
@@ -299,124 +391,83 @@ define([
   }
 
 
-  MapVis.prototype.redrawMap = function(style) {
-    var all_str = "All styles";
-    style = (style && style !='')? style: all_str;
+  MapVis.prototype.redrawMap = function() {
     var _this = this,
         active_i = template.getMapActivatedIndex();
 
-    _this.style = style;
+    setMinMax.call(_this);
 
-    // setTimeout(function() {
-      _this.sb.forEach(function(state, i, sb){
-        // state.ravg = _this.s[state.name].brewery[0].ravg;
-        // state.beer_count = _this.s[state.name].brewery[0].beer_count;
-        if(style != all_str){
-          var beer_map = (_this._sl[style].length>0)? _.map(_this._sl[style], function (style_name) { return _this.s[state.name][style_name]}) : _this.s[state.name][style],
-              combined_beers = _.reduce(beer_map, function(mem, n) { return (n)? mem.concat(n):mem; }, []),
-              beer_reduce = _.reduce(combined_beers, function(mem, beer) { 
-                if(!(beer.name in mem.keys)) {
-                  mem.beers.push(beer);
-                  mem.keys[beer.name] = 1;
-                }
-                return mem; 
-              }, {beers:[], keys:{}}),
-              filtered_beers = (beer_reduce.beers>6)? _.filter(beer_reduce.beers, function(beer) { return beer.revs >= _this.options.min_revs}): beer_reduce.beers,
-              sorted_beers = _.sortBy(filtered_beers, 'ravg'),
-              ravg_filter = _.filter(beer_reduce.beers, function(beer) { return beer.ravg != '-'});
-
-          state.beers = sorted_beers;
-          state.beer_count = ravg_filter.length;
-          state.ravg = Math.round((_.reduce(ravg_filter, function(mem, beer){ return mem+beer.ravg; }, 0.0))/state.beer_count*100)/100;
-
-        } else {
-          state.beers = [];
-          state.beer_count = _this._sb[i].beer_count;
-          state.ravg = _this._sb[i].ravg;
-        
-        }
-
-        //map-popup
-        if (i == active_i) {
-          if(_this.selectedState != ''){
-            var centroid = _this.path.centroid(_this.us_topo[i]),
-              _data = {
-                i:i,
-                title: _this.sb[i].name,
-                ravg: Math.round(_this.sb[i].ravg*100)/100,
-                style: _this.style,
-                beer_count: _this.sb[i].beer_count,
-                beers: _this.sb[i].beers
-              }
-            template.activateMapPopup(_this.popup, centroid[0], centroid[1], _data);
+    _this.states
+      .transition().duration(_this.options.transition_duration)
+        .style("fill", function(d, i) {
+          if(i != active_i) {
+            var _c;
+            if (_this.sb[i].beer_count > 0)
+              _c = _this.color(_this.sb[i].ravg);
+            else
+              _c = '#888'
+            return _c;
           }
-        }
+          return '#E2BF5A'
+        });
 
-      });
+    _this.beers
+      .transition().duration(_this.options.transition_duration)
+        .attr("transform", function(d, i){ return transformBeer.call(_this, d, i, _this.sb); })
+        .style("opacity", function(d, i) {return (_this.sb[i].beer_count>0)? 1: 0});
 
-      setMinMax.call(_this);
+    _this.redrawBar(true);
+    _this.redrawScrollDrag();
+  }
 
-      _this.states
-        .transition().duration(_this.options.transition_duration)
-          .style("fill", function(d, i) {
-            if(i != active_i) {
-              var _c;
-              if (_this.sb[i].beer_count > 0)
-                _c = _this.color(_this.sb[i].ravg);
-              else
-                _c = '#888'
-              return _c;
-            }
-            return '#E2BF5A'
-          });
+  MapVis.prototype.redrawBar = function(transit) {
 
-      _this.beers
-        .transition().duration(_this.options.transition_duration)
-          .attr("transform", function(d, i){ return transformBeer.call(_this, d, i, _this.sb); })
-          .style("opacity", function(d, i) {return (_this.sb[i].beer_count>0)? 1: 0});
+    var _this = this,
+        scroll = (transit)?_this.scroll.transition().duration(_this.options.transition_duration): _this.scroll,
+        first_axis = (transit)?_this.curr_axis.selectAll('.first').transition().duration(_this.options.transition_duration): _this.curr_axis.selectAll('.first'),
+        second_axis = (transit)?_this.curr_axis.selectAll('.second').transition().duration(_this.options.transition_duration): _this.curr_axis.selectAll('.second');
 
-      if(_this.min_rating) {
-        _this.scroll
-          .transition().duration(_this.options.transition_duration)
-            .attr("transform", "translate("+_this.scrollScale(_this.min_rating)+",0)")
-            .attr("width", _this.scrollScale(_this.max_rating-_this.min_rating))
-            .style("opacity", 1);
-      } else {
-        _this.scroll
-          .transition().duration(_this.options.transition_duration)
-            .style("opacity", 0);
-      }
+    if(_this.min_rating) {
+      scroll
+          .attr("transform", "translate("+_this.scrollScale(_this.min_rating)+",0)")
+          .attr("width", _this.scrollScale(_this.max_rating-_this.min_rating))
+          .style("opacity", 1);
+    } else {
+      scroll
+          .style("opacity", 0);
+    }
 
-      if(_this.min_rating) {
-        _this.curr_axis.selectAll('.first')
-          .transition().duration(_this.options.transition_duration)
-            .attr("transform", "translate(" + _this.scrollScale(_this.min_rating) + ",0)")
-            .style("opacity", 1);
-        _this.curr_axis.select('text.first').text(Math.round(_this.min_rating*100)/100)
-            .style("opacity", 1);
-        _this.curr_axis.selectAll('.second')
-          .transition().duration(_this.options.transition_duration)
-            .attr("transform", "translate(" + _this.scrollScale(_this.max_rating) + ",0)")  
-            .style("opacity", 1);
-        _this.curr_axis.select('text.second').text(Math.round(_this.max_rating*100)/100)
-            .style("opacity", 1);
-      } else {
-        _this.curr_axis.selectAll('.first')
-          .transition().duration(_this.options.transition_duration)
-            .style("opacity", 0);
-        _this.curr_axis.select('text.first').text(Math.round(_this.min_rating*100)/100)
-            .style("opacity", 0);
-        _this.curr_axis.selectAll('.second')
-          .transition().duration(_this.options.transition_duration)
-            .style("opacity", 0);
-        _this.curr_axis.select('text.second').text(Math.round(_this.max_rating*100)/100)
-            .style("opacity", 0);
-      }
+    if(_this.min_rating) {
+      first_axis
+          .attr("transform", "translate(" + _this.scrollScale(_this.min_rating) + ",0)")
+          .style("opacity", 1);
+      _this.curr_axis.select('text.first').text(Math.round(_this.min_rating*100)/100)
+          .style("opacity", 1);
+      second_axis
+          .attr("transform", "translate(" + _this.scrollScale(_this.max_rating) + ",0)")  
+          .style("opacity", 1);
+      _this.curr_axis.select('text.second').text(Math.round(_this.max_rating*100)/100)
+          .style("opacity", 1);
+    } else {
+      first_axis
+          .style("opacity", 0);
+      _this.curr_axis.select('text.first').text(Math.round(_this.min_rating*100)/100)
+          .style("opacity", 0);
+      second_axis
+          .style("opacity", 0);
+      _this.curr_axis.select('text.second').text(Math.round(_this.max_rating*100)/100)
+          .style("opacity", 0);
+    }
+  }
 
-
-
-    // }, 2000);
-
+  MapVis.prototype.redrawScrollDrag = function () {
+    var _this = this;
+    this.first_overlay
+        .datum({x: this.scrollScale(this.min_rating)})
+        .attr("transform", "translate(" + this.scrollScale(this.min_rating) + ",0)");
+    this.second_overlay
+        .datum({x: this.scrollScale(this.max_rating)})
+        .attr("transform", "translate(" + this.scrollScale(this.max_rating) + ",0)");
   }
 
   function deselect(_i) {
@@ -437,6 +488,11 @@ define([
         .style("opacity",function(d,i) {
           return 1;
         });
+    this.states_overlay
+      .transition().duration(_this.options.transition_duration)
+        .style("stroke",function(d,i) {
+          return 'none';
+        });
     this.popup.style("z-index",0);
   }
 
@@ -455,11 +511,13 @@ define([
             _c = '#888'
           return _c;
         })
-        .style("stroke",function(d,i) {
-          return (i==_i)? '#000': '#fff';
-        })
         .style("opacity",function(d,i) {
           return (i==_i)? 1: 0.6;
+        });
+    this.states_overlay
+      .transition().duration(_this.options.transition_duration)
+        .style("stroke",function(d,i) {
+          return (i==_i)? '#000': 'none';
         });
     this.popup.style("z-index",1);
   }
@@ -469,6 +527,32 @@ define([
         scale = this.scale(sb[i].beer_count);
 
     return "translate(" + centroid[0] + "," + centroid[1] + ") scale(" + scale + ")";
+  }
+
+  function dragstarted(d, _this) {
+    d3.event.sourceEvent.stopPropagation();
+    // d3.select(this).classed("dragging", true);
+  }
+
+  function dragged(d, _this) {
+    if(d3.select(this).attr("class") == 'first') {
+      _this.min_rating = _this.scrollScale.invert(d3.event.x);
+      _this.min_rating = (_this.min_rating <= 0)? 0 : (_this.min_rating >= _this.max_rating)? _this.max_rating: _this.min_rating;
+      d.x = (d3.event.x<=0)? 0: (d3.event.x>=_this.scrollScale(_this.max_rating))? _this.scrollScale(_this.max_rating): d3.event.x;
+      d3.select(this).attr("transform", "translate(" + d.x + ",0)");
+    }
+
+    if(d3.select(this).attr("class") == 'second') {
+      _this.max_rating = _this.scrollScale.invert(d3.event.x);
+      _this.max_rating = (_this.max_rating >= 5)? 5 : (_this.min_rating >= _this.max_rating)? _this.min_rating: _this.max_rating;
+      d.x = (d3.event.x<=_this.scrollScale(_this.min_rating))? _this.scrollScale(_this.min_rating): (d3.event.x>=_this.options.scroll_width)? _this.options.scroll_width: d3.event.x;
+      d3.select(this).attr("transform", "translate(" + d.x + ",0)");
+    }
+    _this.redrawBar(false);
+    _this.redrawMap();
+  }
+
+  function dragended(d, _this) {
   }
 
 
