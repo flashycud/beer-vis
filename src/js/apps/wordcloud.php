@@ -22,7 +22,6 @@ if (isset($_GET['beer'])) {
 	);
 	
 	$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 	if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 		echo json_encode($results);
 	}
