@@ -25,11 +25,11 @@ function(d3, $, _, MapVis, TreeVis, DetailVis) {
 
   var barVis;
   
-  $('#style').change(function(e){
-    mapVis.updateMap($(this).val());
-    cur_style = $(this).val();
-    update();
-  });
+  // $('#style').change(function(e){
+  //   mapVis.updateMap($(this).val());
+  //   cur_style = $(this).val();
+  //   update();
+  // });
 
   function update(){
     cur_state = mapVis.getSelectedState();

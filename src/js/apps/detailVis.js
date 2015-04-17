@@ -42,10 +42,10 @@ function (d3, d3tip,  Radar, Wordcloud) {
 	var word_list = [];
 
 	/* Initialize word cloud svg */
-	var wordcloud_g = d3.select("body").append("svg")
+	var wordcloud_g = d3.select(".wordcloud").append("svg")
 	.attr("class", "wordcloud")
-	.attr("width", 300)
-	.attr("height", 300)
+	.attr("width", 250)
+	.attr("height", 250)
 	.append("g")
 	.attr("transform", "translate(150,150)")
 
@@ -118,7 +118,7 @@ function (d3, d3tip,  Radar, Wordcloud) {
 
 	    	sqrtmap = d3.scale.sqrt()
 	    	.domain([min,max])
-	    	.range([10,50]);
+	    	.range([15,40]);
 
 	    	d3.layout.cloud().size([300, 300])
 	    	.words(word_list.map(function(d) {
