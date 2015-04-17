@@ -281,7 +281,7 @@ define([
         .attr("x", 0)
         .attr("y", 0)
         .attr("transform", "translate(" + this.scrollScale(this.min_rating) + ",0)")
-        .style("fill", "none")
+        .style("fill", "transparent")
         .call(_this.drag);
     second_overlay = scroll_group_overlay.append('rect')
         .datum({x: this.scrollScale(this.max_rating)})
@@ -291,7 +291,7 @@ define([
         .attr("x", 0)
         .attr("y", 0)
         .attr("transform", "translate(" + this.scrollScale(this.max_rating) + ",0)")
-        .style("fill", "none")
+        .style("fill", "transparent")
         .call(_this.drag);
 
 
