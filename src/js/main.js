@@ -34,7 +34,8 @@ function(d3, $, _, MapVis, TreeVis, DetailVis) {
   function update(){
     cur_state = mapVis.getSelectedState();
     cur_style = TreeVis.getStyle();
-    console.log(cur_style);
+    cur_style_lvl = TreeVis.getStyleLvl();
+    // console.log(cur_style_lvl);
 
     // wordVis.updateWordCloud(cur_style_lvl, cur_style, cur_state);
     // barVis.updateBars(cur_style_lvl, cur_style, cur_state);
