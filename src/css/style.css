@@ -54,7 +54,7 @@ table {
   border-spacing: 0;
 }
 
-h1,
+
 h2,
 h3 {
   font-weight: 600;
@@ -68,14 +68,23 @@ h1,h2 {
   text-transform: uppercase;
 }
 h1 {
-  font-size: 3rem;
+  font-size: 4rem;
   font-weight: 700;
-  margin-top: 1em;
+  margin-top: 1.5em;
   margin-bottom: 0.75em;
+  margin-right: auto;
+  margin-left: auto;
 }
+
+
 h2 {
   font-size: 2rem;
+  margin-left:auto; 
+  margin-right:auto;
+  color: 
 }
+
+
 h3 {
   font-size: 1.6rem;
 }
@@ -256,8 +265,9 @@ svg.map.overlay{
   padding-left: 10px;
 }
 
-.map-popup ul {
-  margin-top: 6px;
+.map-popup ul.beers {
+  margin: 6px 0 0 0;
+  padding: 0;
   overflow: hidden;
   height: 62px;
 }
@@ -279,7 +289,7 @@ svg.map.overlay{
   font-size: 0.6rem;
   color: #888;
   white-space: nowrap;
-  left: 75px;
+  left: 15px;
   /*width: 135px;*/
 }
 .map-popup li:after{

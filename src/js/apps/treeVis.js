@@ -5,7 +5,8 @@ define([
 function (d3, d3tip){
 
 var style;
-var stylelvl;
+var stylelevel;
+
 function TreeVis(update_function) {
 
   
@@ -26,11 +27,17 @@ function TreeVis(update_function) {
   var partition = d3.layout.partition()
       .value(function(d) { return d.size; });
 
+  var description;
   var tip = d3tip()
     .attr('class', 'd3-tip')
     .offset([-10, 0])
     .html(function(d) {
-      return "<strong>"+ d.name  +"</strong> <br><span style='color:red'><strong>" +(d.value)+ "</strong></span> beers";
+      if (d.name == 'Ale') {
+        description='Ale is a type of beer brewed from malted barley<br> using a warm fermentation with a strain of brewers yeast.<br>Compared to lager yeasts, ale yeast ferments more quickly,<br> and often produces a sweeter, fuller-bodied and fruitier taste';}
+      else if (d.name == 'Lager') {description='Lager is a type of beer that is fermented <br> and conditioned at low temperatures. <br>Pale lager is the most widely consumed and <br> commercially available style of beer in the world';}
+      else if (d.name == 'Hybrid') {description='There are a few beer styles that are brewed <br> with methods common to lager brewing but fermented <br> with ale yeast and vice versa. <br>These are the styles that are sometimes <br>referred to as hybrid styles';}
+      else {description = "";}
+      return "<strong>"+ d.name  +"</strong> <br><span style='color:red'><strong>" +(d.value)+ "</strong></span> beers<br>"+description;
     })
    
 
@@ -50,16 +57,17 @@ function TreeVis(update_function) {
         ky = h / 1;
 
     var level = "";
+    
     g.append("svg:rect")
         .attr("width", root.dy * kx)
         .attr("height", function(d) { return d.dx * ky; })
         .attr("class", function(d, i) { 
 
-          if (d.name == 'Ale') {level='1';}
+          if (d.name == 'Ale') {level='1'; description='Ale is a type of beer brewed from malted barley using a warm fermentation with a strain of brewers yeast'}
           if (d.name == 'Lager') {level='2';}
           if (d.name == 'Hybrid') {level='3';}
           
-          return d.children ? "parent"+level : "child"; })
+          return d.children ? "parent"+level : "child"+level; })
         ;
 
     g.append("svg:text")
@@ -70,9 +78,13 @@ function TreeVis(update_function) {
 
      d3.selectAll("g")
       .on('dblclick', function(d) {
-        // console.log(d);
+
         style = d.name;
+<<<<<<< HEAD
         stylelvl = d.depth;
+=======
+        stylelevel = d.depth;
+>>>>>>> 5bd50bddeb556bb035cd20fb103feba017e975bf
 
         update_function();
     });
@@ -99,7 +111,7 @@ function TreeVis(update_function) {
 
       d3.event.stopPropagation();
 
-      update_function();
+      
     }
 
     function transform(d) {
@@ -108,6 +120,6 @@ function TreeVis(update_function) {
   });
 }
 
-return {update: TreeVis, getStyle: function(){return style;}, getStyleLvl: function() { return stylelvl;}};
+return {update: TreeVis, getStyle: function(){return style;}, getStyleLvl: function() { return stylelevel;}};
 });
 // TreeVis(function(){console.log()});
