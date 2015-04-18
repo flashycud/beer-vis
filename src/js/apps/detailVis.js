@@ -353,7 +353,6 @@ function (d3, d3tip,  Radar, Wordcloud) {
 				return y(d.value);
 			})
 			.attr('fill', function(d, i) {
-				console.log(d);
 				var index = feature_dict[feature];
 				return rgbToHex(fill[index][0], fill[index][1], fill[index][2]); 
 			})

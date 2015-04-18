@@ -72,6 +72,9 @@ function TreeVis(update_function) {
       .on('dblclick', function(d) {
         // console.log(d);
         style = d.name;
+        stylelvl = d.depth;
+
+        update_function();
     });
 
     function click(d) {
