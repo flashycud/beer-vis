@@ -80,11 +80,7 @@ function TreeVis(update_function) {
       .on('dblclick', function(d) {
 
         style = d.name;
-<<<<<<< HEAD
-        stylelvl = d.depth;
-=======
         stylelevel = d.depth;
->>>>>>> 5bd50bddeb556bb035cd20fb103feba017e975bf
 
         update_function();
     });

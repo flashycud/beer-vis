@@ -35,10 +35,6 @@ function(d3, $, _, MapVis, TreeVis, DetailVis) {
     cur_state = mapVis.getSelectedState();
     cur_style = TreeVis.getStyle();
     cur_style_lvl = TreeVis.getStyleLvl();
-<<<<<<< HEAD
-=======
-    // console.log(cur_style_lvl);
->>>>>>> 5bd50bddeb556bb035cd20fb103feba017e975bf
 
     // wordVis.updateWordCloud(cur_style_lvl, cur_style, cur_state);
     // barVis.updateBars(cur_style_lvl, cur_style, cur_state);
